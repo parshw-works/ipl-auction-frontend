@@ -320,7 +320,7 @@ html, body {
   }
 
   /* Zero-scroll viewport for Live Auction Arena */
-  #viewAuction {
+   #viewAuction:not(.hidden) {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
