@@ -51,7 +51,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/styles.css?v=15.0" />
+  <link rel="stylesheet" href="/styles.css?v=16.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <!-- Reliable Socket.IO Client with Fallback -->
   <script src="/socket.io.min.js"></script>
@@ -234,14 +234,18 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-3 gap-2">
             <div>
-              <label class="block text-[11px] text-slate-400 font-bold font-display uppercase tracking-wider mb-1">Max Squad Size</label>
-              <input id="inputMaxSquad" type="number" value="25" min="15" max="25" class="w-full bg-[#080d1e] border border-white/15 rounded-xl p-2.5 text-xs text-white font-mono focus:border-amber-400" />
+              <label class="block text-[10px] text-slate-400 font-bold font-display uppercase tracking-wider mb-1">Max Squad</label>
+              <input id="inputMaxSquad" type="number" value="25" min="15" max="25" class="w-full bg-[#080d1e] border border-white/15 rounded-xl p-2 text-xs text-white font-mono focus:border-amber-400" />
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 font-bold font-display uppercase tracking-wider mb-1">Max Overseas</label>
-              <input id="inputMaxOverseas" type="number" value="8" min="4" max="8" class="w-full bg-[#080d1e] border border-white/15 rounded-xl p-2.5 text-xs text-white font-mono focus:border-amber-400" />
+              <label class="block text-[10px] text-slate-400 font-bold font-display uppercase tracking-wider mb-1">Min Squad</label>
+              <input id="inputMinSquad" type="number" value="15" min="10" max="25" class="w-full bg-[#080d1e] border border-white/15 rounded-xl p-2 text-xs text-white font-mono focus:border-amber-400" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 font-bold font-display uppercase tracking-wider mb-1">Overseas</label>
+              <input id="inputMaxOverseas" type="number" value="8" min="4" max="8" class="w-full bg-[#080d1e] border border-white/15 rounded-xl p-2 text-xs text-white font-mono focus:border-amber-400" />
             </div>
           </div>
 
@@ -273,7 +277,21 @@
     <!-- ========================================================================= -->
     <!-- VIEW 2: LOBBY, FRANCHISE SELECTION & RETENTIONS                          -->
     <!-- ========================================================================= -->
-    <div id="viewLobby" class="hidden flex-1 flex flex-col space-y-5">
+    <div id="viewLobby" class="hidden flex-1 flex flex-col space-y-4 sm:space-y-5">
+      <!-- Match-Lock Guard Banner (Active if user navigates back to Lobby while match is live) -->
+      <div id="lobbyMatchLockBanner" class="hidden p-3.5 sm:p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-400 text-amber-300 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
+        <div class="flex items-center space-x-2.5 text-center sm:text-left">
+          <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl animate-pulse"></i>
+          <div>
+            <div class="font-display font-black text-sm uppercase tracking-wider text-white">Match is currently live in this room!</div>
+            <div class="text-xs text-amber-300/80 font-sans">Franchise selection and retention settings are locked.</div>
+          </div>
+        </div>
+        <button id="btnReturnToLiveAuction" class="shimmer-btn tactile-btn px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg active:scale-95 transition">
+          RETURN TO LIVE AUCTION ➔
+        </button>
+      </div>
+
       <!-- Room Info Header -->
       <div class="esport-panel rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
         <div class="flex items-center space-x-3.5">
@@ -357,6 +375,11 @@
     <!-- ========================================================================= -->
     <div id="viewAuction" class="hidden flex-1 flex flex-col justify-between space-y-2 sm:space-y-4">
       
+      <!-- AUCTION CONCLUDING BANNER (5-second countdown to podium) -->
+      <div id="auctionConcludingBanner" class="hidden w-full py-2.5 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 via-rose-600 to-amber-500 text-slate-950 font-display font-black text-center uppercase tracking-widest text-xs sm:text-sm shadow-2xl concluding-banner-pulse z-30">
+        <span id="auctionConcludingText">AUCTION HAMMER CLOSED. Tallying final squad points...</span>
+      </div>
+
       <!-- DYNAMIC BIDDING WAR BANNER (Appears on rapid bids) -->
       <div id="biddingWarBanner" class="hidden w-full py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-rose-900/90 via-amber-600/90 to-rose-900/90 border-2 border-amber-400 shadow-2xl text-center bidding-war-active z-20">
         <span class="text-[11px] sm:text-sm font-black font-display tracking-[0.2em] text-white uppercase flex items-center justify-center space-x-1.5 sm:space-x-2">
@@ -385,7 +408,7 @@
             </span>
           </div>
 
-          <!-- Broadcast Arena Countdown Timer -->
+          <!-- Broadcast Arena Countdown Timer & Host Controls -->
           <div class="flex items-center space-x-1.5 sm:space-x-2">
             <div id="timerContainer" class="flex items-center space-x-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl bg-[#080d1e] border-2 border-white/15 shadow-inner">
               <i class="fa-solid fa-stopwatch text-amber-400 text-xs sm:text-sm"></i>
@@ -403,6 +426,12 @@
             <button id="btnHostUndoSkipPlayer" title="Host: Undo Skip" class="hidden px-2.5 py-1.5 rounded-xl bg-amber-900/60 hover:bg-amber-800 text-amber-200 text-xs border border-amber-700 font-bold items-center space-x-1 transition active:scale-95">
               <i class="fa-solid fa-rotate-left"></i>
               <span class="hidden sm:inline font-display uppercase tracking-wider">Undo</span>
+            </button>
+
+            <!-- Host Conclude Early Button -->
+            <button id="btnHostConcludeAuction" title="Conclude Auction & Finalize Squads" class="hidden px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 text-white text-xs font-display font-bold items-center space-x-1 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed border border-white/20">
+              <i class="fa-solid fa-flag-checkered"></i>
+              <span class="hidden sm:inline uppercase tracking-wider">Conclude</span>
             </button>
           </div>
         </div>
@@ -434,10 +463,17 @@
               </div>
             </div>
 
-            <div class="text-[11px] sm:text-xs text-slate-400 mb-1.5 sm:mb-3.5 flex items-center space-x-2">
+            <div class="text-[11px] sm:text-xs text-slate-400 mb-1.5 sm:mb-3.5 flex items-center space-x-2 flex-wrap gap-y-1">
               <span>Origin: <b id="playerOriginalTeam" class="text-amber-400 font-display font-bold">RCB</b></span>
               <span class="text-slate-600">•</span>
               <span>Base Price: <b id="playerBasePrice" class="text-victoryEmerald font-mono font-bold">₹2.00 Cr</b></span>
+              <span class="text-slate-600">•</span>
+              <div id="playerRatingBox" class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-400/50 shadow-sm shadow-amber-500/20">
+                <i class="fa-solid fa-star text-amber-400 text-[11px] animate-pulse"></i>
+                <span class="text-[10px] text-slate-400 font-display uppercase font-bold tracking-wider">Rating:</span>
+                <span id="playerRatingScore" class="font-display font-black text-xs text-amber-300">--</span>
+                <span class="text-[9px] text-slate-400 font-mono">/100</span>
+              </div>
             </div>
 
             <!-- Stats Telemetry Strip -->
@@ -553,21 +589,68 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 4: AUCTION FINISHED SUMMARY                                         -->
+    <!-- VIEW 4: GRAND FINALE CHAMPIONSHIP PODIUM (PAGE 4: #podium)                -->
     <!-- ========================================================================= -->
-    <div id="viewFinished" class="hidden flex-1 flex flex-col items-center justify-center text-center p-6 space-y-5">
-      <div class="w-24 h-24 rounded-3xl bg-amber-500/10 border-2 border-amber-400/40 flex items-center justify-center text-5xl shadow-2xl shadow-amber-500/30 animate-bounce">
-        🏆
+    <div id="viewFinished" class="hidden flex-1 flex flex-col items-center justify-start text-center p-3 sm:p-6 space-y-6 max-w-6xl w-full mx-auto">
+      
+      <!-- Championship Podium Header -->
+      <div class="space-y-1">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[11px] font-black font-display uppercase tracking-widest">
+          <i class="fa-solid fa-trophy text-amber-400"></i>
+          <span>Official Season Standings</span>
+        </div>
+        <h2 class="text-2xl sm:text-4xl font-black font-display uppercase tracking-wider gold-foil-text">
+          IPL MEGA AUCTION CHAMPIONSHIP
+        </h2>
+        <p class="text-slate-400 max-w-xl text-xs sm:text-sm font-sans mx-auto">
+          Ranked by Total Squad Points calculated from the 0–100 player rating engine. Higher remaining purse breaks ties.
+        </p>
       </div>
-      <h2 class="text-3xl sm:text-4xl font-black font-display uppercase tracking-widest gold-foil-text">
-        IPL MEGA AUCTION COMPLETED!
-      </h2>
-      <p class="text-slate-400 max-w-md text-sm font-sans leading-relaxed">
-        All player sets have concluded! Inspect squad compositions, salary balances, and team chemistry.
-      </p>
-      <button id="btnViewFinalSquads" class="shimmer-btn tactile-btn px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black font-display rounded-2xl text-sm uppercase tracking-widest shadow-2xl shadow-amber-500/30">
-        <i class="fa-solid fa-users mr-2"></i> INSPECT ALL FRANCHISE SQUADS
-      </button>
+
+      <!-- OLYMPIC-STYLE TOP 3 PODIUM -->
+      <div id="podiumTop3Container" class="w-full flex flex-col md:flex-row items-center md:items-end justify-center gap-4 sm:gap-6 pt-6 pb-2 min-h-[300px]">
+        <!-- Injected dynamically by JS -->
+      </div>
+
+      <!-- POSITIONS 4 THROUGH 10 LEADERBOARD TABLE -->
+      <div class="w-full esport-panel rounded-3xl p-4 sm:p-6 text-left shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+          <h3 class="text-sm sm:text-base font-black font-display text-white uppercase tracking-wider flex items-center space-x-2">
+            <i class="fa-solid fa-list-ol text-laserCyan"></i>
+            <span>ALL FRANCHISE STANDINGS & SQUAD LEADERBOARD</span>
+          </h3>
+          <span class="text-[10px] text-slate-400 font-mono">Tap any franchise to inspect player points</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-slate-400 font-display uppercase tracking-wider text-[10px] border-b border-white/5 pb-2">
+                <th class="py-2.5 px-3 text-left">Rank</th>
+                <th class="py-2.5 px-3 text-left">Franchise</th>
+                <th class="py-2.5 px-3 text-left">Manager</th>
+                <th class="py-2.5 px-3 text-center">Squad</th>
+                <th class="py-2.5 px-3 text-right">Remaining Purse</th>
+                <th class="py-2.5 px-3 text-right">Total Points</th>
+              </tr>
+            </thead>
+            <tbody id="podiumRestTableBody" class="divide-y divide-white/5 font-sans">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 flex items-center justify-center space-x-3 flex-wrap gap-y-2">
+        <button id="btnViewFinalSquads" class="tactile-btn px-6 py-3.5 bg-[#0d1324] border border-white/20 hover:border-amber-400 text-slate-200 font-black font-display rounded-2xl text-xs sm:text-sm uppercase tracking-widest shadow-xl transition">
+          <i class="fa-solid fa-users mr-2"></i> Inspect Squads
+        </button>
+        <button id="btnReturnHomeFromPodium" class="shimmer-btn tactile-btn px-8 py-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 text-slate-950 font-black font-display rounded-2xl text-xs sm:text-sm uppercase tracking-widest shadow-2xl shadow-amber-500/30 transition">
+          <i class="fa-solid fa-house mr-2"></i> Home Gateway
+        </button>
+      </div>
+
     </div>
 
   </main>
@@ -720,7 +803,7 @@
     </div>
   </div>
 
-  <script src="/app.js?v=14.0"></script>
+  <script src="/app.js?v=17.0"></script>
   <script>
     // WIPE ALL SERVICE WORKERS & ALL CACHES TO PREVENT ANY OLD CODE FREEZING
     if ('serviceWorker' in navigator) {
