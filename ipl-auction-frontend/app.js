@@ -208,6 +208,54 @@ window.userSettings = {
   }
 };
 
+// UI Helper: Sync Sound Effects Status across all headers & modals
+function syncSFXUI() {
+  const isEnabled = !!(window.auctionAudio && window.auctionAudio.sfxEnabled);
+  document.querySelectorAll('#sfxToggleText').forEach(txt => {
+    txt.textContent = isEnabled ? 'ON' : 'OFF';
+    txt.className = isEnabled 
+      ? 'text-[10px] font-mono text-emerald-400 font-bold' 
+      : 'text-[10px] font-mono text-slate-500 font-bold';
+  });
+}
+
+// UI Helper: Open Settings Modal cleanly across Mobile & PC
+function openSettingsModal() {
+  const modalSettings = document.getElementById('modal-settings');
+  if (modalSettings) {
+    modalSettings.classList.remove('hidden');
+    modalSettings.style.display = 'flex';
+    if (window.auctionAudio && window.auctionAudio.syncUI) window.auctionAudio.syncUI();
+    if (window.userSettings && window.userSettings.syncUI) window.userSettings.syncUI();
+    syncSFXUI();
+  }
+}
+
+// UI Helper: Close Settings Modal
+function closeSettingsModal() {
+  const modalSettings = document.getElementById('modal-settings');
+  if (modalSettings) {
+    modalSettings.classList.add('hidden');
+    modalSettings.style.display = 'none';
+  }
+}
+
+// UI Helper: Open Standings on Mobile Bottom-Sheet or Desktop Drawer/Modal
+function openStandingsUI() {
+  if (window.innerWidth <= 768) {
+    openMobileBottomSheet();
+  } else {
+    const modalStandings = document.getElementById('modal-standings');
+    if (modalStandings) {
+      modalStandings.classList.remove('hidden');
+      modalStandings.style.display = 'flex';
+      populateModalStandings();
+    } else {
+      openTeamsDrawer();
+    }
+  }
+}
+
 // Global Click Delegation on Document for Voice, Cheer, Settings & Copy
 document.addEventListener('click', (e) => {
   const voiceTarget = e.target.closest('#toggleVoiceBtn, #btn-voice-toggle');
@@ -226,18 +274,21 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Settings Menu Dropdown Toggle
-  const settingsBtn = e.target.closest('#btnSettingsMenu');
-  const dropdown = document.getElementById('settingsDropdown');
-  if (settingsBtn) {
+  // Settings Modal Trigger (Lobby Gear, Auction HUD Gear, or any .btn-settings-trigger)
+  const menuTrigger = e.target.closest('#btn-open-menu, .btn-settings-trigger, #btnSettingsMenu');
+  if (menuTrigger) {
     e.preventDefault();
     e.stopPropagation();
-    if (dropdown) dropdown.classList.toggle('hidden');
+    openSettingsModal();
     return;
   }
-  // Click outside to close settings dropdown
-  if (dropdown && !dropdown.classList.contains('hidden') && !e.target.closest('#settingsDropdown')) {
-    dropdown.classList.add('hidden');
+
+  // Standings Trigger (Auction Top Bar 🏆 Standings button or Lobby Standings button)
+  if (e.target.closest('#btn-open-standings, #toggleDrawerBtn')) {
+    e.preventDefault();
+    e.stopPropagation();
+    openStandingsUI();
+    return;
   }
 
   // SFX Toggle
@@ -245,19 +296,28 @@ document.addEventListener('click', (e) => {
   if (sfxBtn) {
     e.preventDefault();
     window.auctionAudio.sfxEnabled = !window.auctionAudio.sfxEnabled;
-    const txt = document.getElementById('sfxToggleText');
-    if (txt) {
-      txt.textContent = window.auctionAudio.sfxEnabled ? 'ON' : 'OFF';
-      txt.className = window.auctionAudio.sfxEnabled ? 'text-[10px] font-mono text-emerald-400 font-bold' : 'text-[10px] font-mono text-slate-500 font-bold';
-    }
+    try {
+      localStorage.setItem('auction_sfx_enabled', window.auctionAudio.sfxEnabled.toString());
+    } catch (err) {}
+    syncSFXUI();
     showToast(window.auctionAudio.sfxEnabled ? 'Sound Effects enabled 🔔' : 'Sound Effects muted 🔕', 'info');
     return;
   }
 
-  // Header Leave Room
-  const leaveBtn = e.target.closest('#btnLeaveRoomHeader');
+  // Open Event Feed from Settings Modal
+  if (e.target.closest('#btnModalOpenLogs')) {
+    e.preventDefault();
+    closeSettingsModal();
+    openLogsDrawer();
+    return;
+  }
+
+  // Leave Room (from Header or Settings Modal)
+  const leaveBtn = e.target.closest('#btnLeaveRoomHeader, #btnLeaveRoomModal');
   if (leaveBtn) {
     e.preventDefault();
+    closeSettingsModal();
+    const dropdown = document.getElementById('settingsDropdown');
     if (dropdown) dropdown.classList.add('hidden');
     if (confirm('Leave current room and return to Home Gateway?')) {
       if (currentRoom) removeActiveSession(currentRoom.code);
@@ -287,40 +347,11 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Settings Menu trigger in EA FC Top Bar
-  const menuTrigger = e.target.closest('#btn-open-menu, .btn-settings-trigger');
-  if (menuTrigger) {
-    e.preventDefault();
-    const modalSettings = document.getElementById('modal-settings');
-    if (modalSettings) {
-      modalSettings.classList.remove('hidden');
-      modalSettings.classList.add('flex');
-    } else {
-      const dropdown = document.getElementById('settingsDropdown');
-      if (dropdown) dropdown.classList.toggle('hidden');
-    }
-    return;
-  }
-
-  // Standings Trigger in EA FC Top Bar (#modal-standings)
-  if (e.target.closest('#btn-open-standings')) {
-    e.preventDefault();
-    const modalStandings = document.getElementById('modal-standings');
-    if (modalStandings) {
-      modalStandings.classList.remove('hidden');
-      modalStandings.classList.add('flex');
-      // Populate standings in modal if needed
-      populateModalStandings();
-    } else {
-      openTeamsDrawer();
-    }
-    return;
-  }
-
   // Close Any Modal via Close Button or Backdrop Click
   if (e.target.closest('.btn-modal-close') || e.target.classList.contains('modal-backdrop')) {
     document.querySelectorAll('.modal-backdrop').forEach(m => {
       m.classList.add('hidden');
+      m.style.display = 'none';
       m.classList.remove('flex');
     });
     return;
@@ -331,10 +362,12 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   window.auctionAudio.syncUI();
   window.userSettings.syncUI();
+  syncSFXUI();
 });
 setTimeout(() => {
   window.auctionAudio.syncUI();
   window.userSettings.syncUI();
+  syncSFXUI();
 }, 200);
 
 // Backward compatibility accessor
