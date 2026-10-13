@@ -592,4 +592,44 @@ body.in-auction-view > main {
   z-index: 35;
 }
 
+/* Modal Backdrop & Bottom-Sheet Styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999 !important;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-backdrop.hidden {
+  display: none !important;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 500px;
+  max-height: 85dvh;
+  background: #0E1626;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100000;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+}
+
+@media (min-width: 640px) {
+  .modal-backdrop {
+    align-items: center;
+  }
+  .modal-sheet {
+    border-radius: 24px;
+  }
+}
+
 
