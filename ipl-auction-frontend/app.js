@@ -1800,11 +1800,12 @@ function updateBidButton() {
   if (!currentRoom.highestBidder) {
     nextAmount = currentRoom.currentPlayer.basePrice;
     inc = 0;
-    bidButtonText.innerHTML = `<span class="tracking-widest">OPEN BID</span> <span class="text-xs font-mono opacity-80">(${formatCurrency(nextAmount)})</span>`;
+    bidButtonText.innerHTML = `<span>🔨 OPEN BID (${formatCurrency(nextAmount).toUpperCase()})</span>`;
   } else {
     inc = calculateIncrement(currentBid);
     nextAmount = currentBid + inc;
-    bidButtonText.innerHTML = `<span>RAISE BID</span> <span class="text-xs font-mono font-bold bg-black/25 px-2 py-0.5 rounded-lg">+${formatCurrency(inc)} ➔ ${formatCurrency(nextAmount)}</span>`;
+    const incLabel = inc >= 10000000 ? `+₹${(inc / 10000000).toFixed(2)} Cr` : `+${(inc / 100000).toFixed(0)}L`;
+    bidButtonText.innerHTML = `<span>🔨 BID ${formatCurrency(nextAmount)}</span> <span class="text-xs font-mono font-bold opacity-80">(${incLabel})</span>`;
   }
 
   bidStatusNotice.classList.add('hidden');
@@ -1836,7 +1837,7 @@ function updateBidButton() {
     btnPlaceBid.disabled = true;
     btnPlaceBid.classList.remove('from-amber-500', 'to-amber-400');
     btnPlaceBid.classList.add('from-emerald-500', 'to-emerald-400', 'text-slate-950', 'ring-2', 'ring-emerald-400');
-    bidButtonText.innerHTML = `<i class="fa-solid fa-crown mr-1.5 text-slate-950 animate-bounce"></i> <span>YOU ARE HIGHEST BIDDER</span>`;
+    bidButtonText.innerHTML = `<span>✅ HIGHEST BIDDER</span>`;
   } else if (hasFolded) {
     btnPlaceBid.disabled = true;
     bidStatusNotice.textContent = 'You have folded for this player and cannot bid again';
