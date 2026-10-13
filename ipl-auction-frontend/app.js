@@ -863,15 +863,20 @@ function attemptSessionReentry() {
   const urlRoom = params.get('room');
   const targetCode = urlRoom ? urlRoom.toUpperCase().trim() : null;
 
-  if (targetCode && sessions[targetCode]) {
-    reconnectToRoom(targetCode, sessions[targetCode]);
+  if (targetCode) {
+    if (sessions[targetCode]) {
+      reconnectToRoom(targetCode, sessions[targetCode]);
+      return;
+    }
+    // Direct link or refresh without cached session: query room directly
+    const pId = getOrCreatePlayerId();
+    const storedName = localStorage.getItem('ipl_manager_name') || 'Player ' + Math.floor(Math.random() * 90 + 10);
+    reconnectToRoom(targetCode, {
+      roomCode: targetCode,
+      playerId: pId,
+      managerName: storedName
+    });
     return;
-  }
-
-  // If ongoing sessions exist and we are on home view, prompt user via ongoing matches hub
-  const keys = Object.keys(sessions);
-  if (keys.length > 0 && targetCode) {
-    reconnectToRoom(targetCode, sessions[targetCode] || { roomCode: targetCode });
   }
 }
 
@@ -1006,6 +1011,8 @@ function showView(viewName, roomCode = null) {
   } else if (norm === 'lobby') {
     currentViewState = 'lobby';
     if (viewLobby) viewLobby.classList.remove('hidden');
+
+    renderFranchiseGrid();
 
     // Anti-Tamper Match Lock Guard:
     if (currentRoom && currentRoom.isStarted) {
@@ -1346,9 +1353,11 @@ function setupLobby() {
 
 // Render Available Franchises with 3D Collectible Cards & Dynamic Hover Auras
 function renderFranchiseGrid() {
+  if (!franchiseGrid) return;
   franchiseGrid.innerHTML = '';
   const takenMap = new Map();
-  (currentRoom.teams || []).forEach(t => takenMap.set(t.franchiseId, t));
+  const teams = (currentRoom && currentRoom.teams) ? currentRoom.teams : [];
+  teams.forEach(t => takenMap.set(t.franchiseId, t));
 
   FRANCHISES.forEach(f => {
     const isTaken = takenMap.has(f.id);
@@ -3103,3 +3112,21 @@ function registerSocketAuctionListeners(s) {
 if (socket) {
   registerSocketAuctionListeners(socket);
 }
+
+// Initial Boot View Dispatch
+(function bootInitialView() {
+  const path = window.location.pathname.toLowerCase();
+  const params = new URLSearchParams(window.location.search);
+  const qRoom = params.get('room');
+  const roomCode = qRoom ? qRoom.toUpperCase() : null;
+
+  let initialView = 'home';
+  if (path.includes('lobby') || window.location.hash.includes('lobby')) initialView = 'lobby';
+  else if (path.includes('auction') || window.location.hash.includes('auction')) initialView = 'auction';
+  else if (path.includes('podium') || window.location.hash.includes('podium')) initialView = 'podium';
+
+  showView(initialView, roomCode);
+  if (initialView === 'lobby') {
+    renderFranchiseGrid();
+  }
+})();
