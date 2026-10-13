@@ -1321,20 +1321,22 @@ btnCopyCode.addEventListener('click', () => {
 // Setup Lobby UI
 function setupLobby() {
   switchView('LOBBY');
-  roomBadge.classList.remove('hidden');
-  currentRoomCode.textContent = currentRoom.code;
-  lobbyRoomCode.textContent = currentRoom.code;
+  if (roomBadge) roomBadge.classList.remove('hidden');
+  if (currentRoom && currentRoom.code) {
+    if (currentRoomCode) currentRoomCode.textContent = currentRoom.code;
+    if (lobbyRoomCode) lobbyRoomCode.textContent = currentRoom.code;
+  }
 
   if (isHost) {
-    hostNotice.classList.remove('hidden');
-    btnStartAuctionHost.classList.remove('hidden');
-    btnHostSkipPlayer.classList.remove('hidden');
-    btnHostUndoSkipPlayer.classList.remove('hidden');
+    if (hostNotice) hostNotice.classList.remove('hidden');
+    if (btnStartAuctionHost) btnStartAuctionHost.classList.remove('hidden');
+    if (btnHostSkipPlayer) btnHostSkipPlayer.classList.remove('hidden');
+    if (btnHostUndoSkipPlayer) btnHostUndoSkipPlayer.classList.remove('hidden');
   } else {
-    hostNotice.classList.add('hidden');
-    btnStartAuctionHost.classList.add('hidden');
-    btnHostSkipPlayer.classList.add('hidden');
-    btnHostUndoSkipPlayer.classList.add('hidden');
+    if (hostNotice) hostNotice.classList.add('hidden');
+    if (btnStartAuctionHost) btnStartAuctionHost.classList.add('hidden');
+    if (btnHostSkipPlayer) btnHostSkipPlayer.classList.add('hidden');
+    if (btnHostUndoSkipPlayer) btnHostUndoSkipPlayer.classList.add('hidden');
   }
 
   renderFranchiseGrid();
@@ -1418,15 +1420,19 @@ function selectFranchise(franchiseId) {
 
 function updateUserFranchisePill() {
   if (!myTeam) return;
-  userFranchisePill.classList.remove('hidden');
-  userFranchisePill.classList.add('flex');
-  userFranchiseLogo.src = myTeam.logo || `/logos/${myTeam.franchiseId}.svg`;
-  userFranchiseTag.textContent = myTeam.franchiseId;
-  userPurseDisplay.textContent = formatCurrency(myTeam.purse);
+  if (userFranchisePill) {
+    userFranchisePill.classList.remove('hidden');
+    userFranchisePill.classList.add('flex');
+  }
+  if (userFranchiseLogo) userFranchiseLogo.src = myTeam.logo || `/logos/${myTeam.franchiseId}.svg`;
+  if (userFranchiseTag) userFranchiseTag.textContent = myTeam.franchiseId;
+  if (userPurseDisplay) userPurseDisplay.textContent = formatCurrency(myTeam.purse);
 
-  myPurseAmount.textContent = formatCurrency(myTeam.purse);
-  mySquadCount.textContent = `${myTeam.squadCount || 0}/${currentRoom.settings.maxSquadSize}`;
-  myOverseasCount.textContent = `${myTeam.overseasCount || 0}/${currentRoom.settings.maxOverseas}`;
+  if (myPurseAmount) myPurseAmount.textContent = formatCurrency(myTeam.purse);
+  const maxSquad = (currentRoom && currentRoom.settings && currentRoom.settings.maxSquadSize) || 25;
+  const maxOS = (currentRoom && currentRoom.settings && currentRoom.settings.maxOverseas) || 8;
+  if (mySquadCount) mySquadCount.textContent = `${myTeam.squadCount || 0}/${maxSquad}`;
+  if (myOverseasCount) myOverseasCount.textContent = `${myTeam.overseasCount || 0}/${maxOS}`;
 }
 
 // Update the Persistent Lobby Banner for the User's Franchise
@@ -1705,25 +1711,29 @@ btnStartAuctionHost.addEventListener('click', () => {
 });
 
 // Host Skip Player
-btnHostSkipPlayer.addEventListener('click', () => {
-  if (!confirm('Pass / skip this player to unsold?')) return;
-  socket.emit('skip_player', {}, (res) => {
-    if (!res || !res.success) {
-      showToast(res ? res.error : 'Failed to skip', 'error');
-    }
+if (btnHostSkipPlayer) {
+  btnHostSkipPlayer.addEventListener('click', () => {
+    if (!confirm('Pass / skip this player to unsold?')) return;
+    socket.emit('skip_player', {}, (res) => {
+      if (!res || !res.success) {
+        showToast(res ? res.error : 'Failed to skip', 'error');
+      }
+    });
   });
-});
+}
 
 // Host Undo Skip Player
-btnHostUndoSkipPlayer.addEventListener('click', () => {
-  socket.emit('undo_skip_player', {}, (res) => {
-    if (res && res.success) {
-      showToast('Restored skipped player to hammer!', 'success');
-    } else {
-      showToast(res ? res.error : 'Nothing to undo', 'warning');
-    }
+if (btnHostUndoSkipPlayer) {
+  btnHostUndoSkipPlayer.addEventListener('click', () => {
+    socket.emit('undo_skip_player', {}, (res) => {
+      if (res && res.success) {
+        showToast('Restored skipped player to hammer!', 'success');
+      } else {
+        showToast(res ? res.error : 'Nothing to undo', 'warning');
+      }
+    });
   });
-});
+}
 
 // Update Live Auction View
 function updateAuctionView(room) {
@@ -1818,11 +1828,13 @@ function updateAuctionView(room) {
     btnHostConcludeAuction.classList.add('hidden');
   }
 
-  if (isHost && room.canUndoSkip) {
-    btnHostUndoSkipPlayer.classList.remove('hidden');
-    btnHostUndoSkipPlayer.classList.add('flex');
-  } else {
-    btnHostUndoSkipPlayer.classList.add('hidden');
+  if (btnHostUndoSkipPlayer) {
+    if (isHost && room.canUndoSkip) {
+      btnHostUndoSkipPlayer.classList.remove('hidden');
+      btnHostUndoSkipPlayer.classList.add('flex');
+    } else {
+      btnHostUndoSkipPlayer.classList.add('hidden');
+    }
   }
 
   updateBidButton();
@@ -1917,13 +1929,15 @@ function updateBidButton() {
   // Update consensus fold status bar
   const foldedCount = currentRoom.foldedCount || 0;
   const requiredFolds = currentRoom.requiredFolds || (currentRoom.teams ? Math.max(currentRoom.teams.length - 1, 1) : 1);
-  foldCountDisplay.textContent = `${foldedCount}/${requiredFolds} Teams`;
-  if (foldedCount > 0 && foldedCount < requiredFolds) {
-    foldStatusHint.textContent = `${requiredFolds - foldedCount} more needed for instant hammer`;
-  } else if (foldedCount >= requiredFolds && requiredFolds > 0) {
-    foldStatusHint.textContent = `All teams folded! Hammer falling...`;
-  } else {
-    foldStatusHint.textContent = `Instant hammer if all pass`;
+  if (foldCountDisplay) foldCountDisplay.textContent = `${foldedCount}/${requiredFolds} Teams`;
+  if (foldStatusHint) {
+    if (foldedCount > 0 && foldedCount < requiredFolds) {
+      foldStatusHint.textContent = `${requiredFolds - foldedCount} more needed for instant hammer`;
+    } else if (foldedCount >= requiredFolds && requiredFolds > 0) {
+      foldStatusHint.textContent = `All teams folded! Hammer falling...`;
+    } else {
+      foldStatusHint.textContent = `Instant hammer if all pass`;
+    }
   }
 }
 
@@ -2911,13 +2925,17 @@ function registerSocketAuctionListeners(s) {
     }
 
     if (highestBidder) {
-      highestBidderName.textContent = `${highestBidder.teamName} (${highestBidder.teamId}) - ${highestBidder.managerName}`;
-      highestBidderPlaceholderIcon.classList.add('hidden');
-      highestBidderLogoImg.classList.remove('hidden');
-      highestBidderLogoImg.src = highestBidder.logo || `/logos/${highestBidder.teamId}.svg`;
-      highestBidderBadge.style.backgroundColor = highestBidder.color || '#334155';
-      highestBidderBadge.classList.add('scale-105', 'border-amber-400');
-      setTimeout(() => highestBidderBadge.classList.remove('scale-105', 'border-amber-400'), 500);
+      if (highestBidderName) highestBidderName.textContent = `${highestBidder.teamName} (${highestBidder.teamId}) - ${highestBidder.managerName}`;
+      if (highestBidderPlaceholderIcon) highestBidderPlaceholderIcon.classList.add('hidden');
+      if (highestBidderLogoImg) {
+        highestBidderLogoImg.classList.remove('hidden');
+        highestBidderLogoImg.src = highestBidder.logo || `/logos/${highestBidder.teamId}.svg`;
+      }
+      if (highestBidderBadge) {
+        highestBidderBadge.style.backgroundColor = highestBidder.color || '#334155';
+        highestBidderBadge.classList.add('scale-105', 'border-amber-400');
+        setTimeout(() => highestBidderBadge.classList.remove('scale-105', 'border-amber-400'), 500);
+      }
     }
 
     playBidSound();
