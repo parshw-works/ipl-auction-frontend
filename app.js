@@ -1898,19 +1898,24 @@ function updateBidButton() {
     btnPlaceBid.classList.remove('from-amber-500', 'to-amber-400');
     btnPlaceBid.classList.add('from-emerald-500', 'to-emerald-400', 'text-slate-950', 'ring-2', 'ring-emerald-400');
     bidButtonText.innerHTML = `<span>✅ HIGHEST BIDDER</span>`;
-  } else if (hasFolded) {
-    btnPlaceBid.disabled = true;
-    bidStatusNotice.textContent = 'You have folded for this player and cannot bid again';
-    bidStatusNotice.classList.remove('hidden');
   } else if (cannotBidReason) {
     btnPlaceBid.disabled = true;
     bidStatusNotice.textContent = cannotBidReason;
     bidStatusNotice.classList.remove('hidden');
   } else if (isBidCooldown) {
     btnPlaceBid.disabled = true;
+  } else {
+    // Re-enable BID button even if previously folded — placing a bid re-enters the auction!
+    btnPlaceBid.disabled = false;
+    btnPlaceBid.classList.remove('from-emerald-500', 'to-emerald-400', 'text-slate-950', 'ring-2', 'ring-emerald-400');
+    btnPlaceBid.classList.add('from-amber-500', 'to-amber-400');
+    if (hasFolded) {
+      bidStatusNotice.textContent = 'Tap BID to re-enter the auction';
+      bidStatusNotice.classList.remove('hidden');
+    }
   }
 
-  // Update Fold button state (COMPLETELY DECOUPLED FROM BID RESTRICTIONS)
+  // Update Fold button state (Supports Toggle Re-entry)
   if (!myTeam || !currentRoom || !currentRoom.currentPlayer) {
     btnFoldPlayer.disabled = true;
   } else if (isHighestBidder) {
@@ -1924,8 +1929,8 @@ function updateBidButton() {
     const foldedList = currentRoom.foldedTeams || [];
     const hasFolded = foldedList.includes(myTeam.franchiseId);
     if (hasFolded) {
-      btnFoldPlayer.disabled = true;
-      foldButtonText.textContent = 'FOLDED ✓';
+      btnFoldPlayer.disabled = false;
+      foldButtonText.textContent = 'RE-ENTER 🔄';
       btnFoldPlayer.classList.remove('opacity-40');
       btnFoldPlayer.classList.add('border-emerald-500/50', 'text-emerald-400');
     } else {
@@ -1950,7 +1955,7 @@ function updateBidButton() {
   }
 }
 
-// FOLD BUTTON CLICK HANDLER
+// FOLD / RE-ENTER BUTTON CLICK HANDLER
 btnFoldPlayer.addEventListener('click', () => {
   if (!currentRoom || !currentRoom.currentPlayer || !myTeam) return;
 
@@ -1960,16 +1965,39 @@ btnFoldPlayer.addEventListener('click', () => {
     return;
   }
 
-  socket.emit('team_fold', {}, (res) => {
-    if (res && res.success) {
-      playBeep(320, 'sine', 0.15);
-      showToast('You folded on this player!', 'info');
-      foldButtonText.textContent = 'FOLDED ✓';
-      btnFoldPlayer.disabled = true;
-    } else {
-      showToast(res ? res.error : 'Cannot fold right now', 'warning');
-    }
-  });
+  const foldedList = currentRoom.foldedTeams || [];
+  const hasFolded = foldedList.includes(myTeam.franchiseId);
+
+  if (hasFolded) {
+    // User wants to UN-FOLD / Re-enter
+    socket.emit('team_unfold', {}, (res) => {
+      if (res && res.success) {
+        playBeep(440, 'sine', 0.1);
+        showToast('You re-entered the bidding war!', 'success');
+        if (currentRoom.foldedTeams) {
+          currentRoom.foldedTeams = currentRoom.foldedTeams.filter(id => id !== myTeam.franchiseId);
+        }
+        updateBidButton();
+      } else {
+        showToast(res ? res.error : 'Cannot re-enter right now', 'warning');
+      }
+    });
+  } else {
+    // User wants to FOLD
+    socket.emit('team_fold', {}, (res) => {
+      if (res && res.success) {
+        playBeep(320, 'sine', 0.15);
+        showToast('You passed on this player. Tap BID or RE-ENTER to jump back in!', 'info');
+        if (!currentRoom.foldedTeams) currentRoom.foldedTeams = [];
+        if (!currentRoom.foldedTeams.includes(myTeam.franchiseId)) {
+          currentRoom.foldedTeams.push(myTeam.franchiseId);
+        }
+        updateBidButton();
+      } else {
+        showToast(res ? res.error : 'Cannot fold right now', 'warning');
+      }
+    });
+  }
 });
 
 // BID BUTTON CLICK HANDLER
@@ -2901,6 +2929,9 @@ function registerSocketAuctionListeners(s) {
       currentRoom.currentBid = currentBid;
       currentRoom.highestBidder = highestBidder;
       currentRoom.isTimerRunning = true;
+      // Clear folds on new bid so rival teams can re-enter immediately
+      currentRoom.foldedTeams = [];
+      currentRoom.foldedCount = 0;
     }
 
     currentBidAmount.textContent = formatCurrency(currentBid);
