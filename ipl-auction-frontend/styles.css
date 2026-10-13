@@ -393,28 +393,29 @@ html, body {
     padding-right: 0.6rem;
   }
 
-  /* Zero-scroll viewport for Live Auction Arena (Never overrides .hidden) */
-  #viewAuction:not(.hidden),
-  #view-auction:not(.hidden) {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    gap: 0.5rem !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-    padding: 0.65rem !important;
-    padding-bottom: max(0.65rem, env(safe-area-inset-bottom)) !important;
-  }
+}
 
-  /* Hide default top site header when active in EA FC Auction View */
-  body.in-auction-view > header {
-    display: none !important;
-  }
-  body.in-auction-view > main {
-    padding: 0 !important;
-    max-width: 100% !important;
-  }
+/* Universal Zero-scroll viewport for Live Auction Arena (Never overrides .hidden) */
+#viewAuction:not(.hidden),
+#view-auction:not(.hidden) {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  padding: 0.65rem !important;
+  padding-bottom: max(0.65rem, env(safe-area-inset-bottom)) !important;
+}
+
+/* Hide default top site header ONLY when actively inside EA FC Auction View */
+body.in-auction-view > header {
+  display: none !important;
+}
+body.in-auction-view > main {
+  padding: 0 !important;
+  max-width: 100% !important;
 }
 
 /* ==========================================================================
