@@ -287,21 +287,42 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Standings button in EA FC Top Bar
-  const standingsBtn = e.target.closest('#btn-open-standings');
-  if (standingsBtn) {
+  // Settings Menu trigger in EA FC Top Bar
+  const menuTrigger = e.target.closest('#btn-open-menu, .btn-settings-trigger');
+  if (menuTrigger) {
     e.preventDefault();
-    openTeamsDrawer();
+    const modalSettings = document.getElementById('modal-settings');
+    if (modalSettings) {
+      modalSettings.classList.remove('hidden');
+      modalSettings.classList.add('flex');
+    } else {
+      const dropdown = document.getElementById('settingsDropdown');
+      if (dropdown) dropdown.classList.toggle('hidden');
+    }
     return;
   }
 
-  // Settings Menu trigger in EA FC Top Bar
-  const menuTrigger = e.target.closest('#btn-open-menu');
-  if (menuTrigger) {
+  // Standings Trigger in EA FC Top Bar (#modal-standings)
+  if (e.target.closest('#btn-open-standings')) {
     e.preventDefault();
-    e.stopPropagation();
-    const dropdown = document.getElementById('settingsDropdown');
-    if (dropdown) dropdown.classList.toggle('hidden');
+    const modalStandings = document.getElementById('modal-standings');
+    if (modalStandings) {
+      modalStandings.classList.remove('hidden');
+      modalStandings.classList.add('flex');
+      // Populate standings in modal if needed
+      populateModalStandings();
+    } else {
+      openTeamsDrawer();
+    }
+    return;
+  }
+
+  // Close Any Modal via Close Button or Backdrop Click
+  if (e.target.closest('.btn-modal-close') || e.target.classList.contains('modal-backdrop')) {
+    document.querySelectorAll('.modal-backdrop').forEach(m => {
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    });
     return;
   }
 });
@@ -529,13 +550,14 @@ const auctionTimer = document.getElementById('timer-seconds') || document.getEle
 const playerSoldWatermark = document.getElementById('playerSoldWatermark');
 const playerUnsoldWatermark = document.getElementById('playerUnsoldWatermark');
 
-const stat1 = document.getElementById('stat-mat') || document.getElementById('stat1');
-const stat2 = document.getElementById('stat-runs') || document.getElementById('stat2');
-const stat3 = document.getElementById('stat-avg') || document.getElementById('stat3');
-const stat4 = document.getElementById('stat-sr') || document.getElementById('stat4');
-const statLabel2 = document.getElementById('stat-label-2') || document.getElementById('statLabel2');
-const statLabel3 = document.getElementById('stat-label-3') || document.getElementById('statLabel3');
-const statLabel4 = document.getElementById('stat-label-4') || document.getElementById('statLabel4');
+const stat1 = document.getElementById('stat-col1') || document.getElementById('stat-mat') || document.getElementById('stat1');
+const stat2 = document.getElementById('stat-col2') || document.getElementById('stat-runs') || document.getElementById('stat2');
+const stat3 = document.getElementById('stat-col3') || document.getElementById('stat-avg') || document.getElementById('stat3');
+const stat4 = document.getElementById('stat-col4') || document.getElementById('stat-sr') || document.getElementById('stat4');
+const statLabel2 = document.getElementById('stat-col2-label') || document.getElementById('stat-label-2') || document.getElementById('statLabel2');
+const statLabel3 = document.getElementById('stat-col3-label') || document.getElementById('stat-label-3') || document.getElementById('statLabel3');
+const statLabel4 = document.getElementById('stat-col4-label') || document.getElementById('stat-label-4') || document.getElementById('statLabel4');
+const playerOriginTeam = document.getElementById('player-origin-team') || document.getElementById('playerOriginalTeam');
 
 const currentBidAmount = document.getElementById('current-bid-amount') || document.getElementById('currentBidAmount');
 const highestBidderName = document.getElementById('leading-bidder-name') || document.getElementById('highestBidderName');
@@ -1771,8 +1793,9 @@ function updateAuctionView(room) {
   if (playerBatBowlStyle) playerBatBowlStyle.textContent = `${player.stats.battingStyle || 'Right hand Bat'} • ${player.stats.bowlingStyle || 'Right arm Medium'}`;
   if (playerRoleBadge) playerRoleBadge.textContent = player.role;
   if (playerCountryBadge) playerCountryBadge.textContent = player.isOverseas ? `✈️ ${player.country}` : `🇮🇳 ${player.country}`;
-  if (playerTierBadge) playerTierBadge.innerHTML = `LOT #${room.auctionIndex + 1} • ${player.tier}`;
-  if (playerOriginalTeam) playerOriginalTeam.textContent = player.originalTeam || 'None';
+  if (playerTierBadge) playerTierBadge.innerHTML = `LOT #${room.auctionIndex + 1}`;
+  if (playerOriginalTeam) playerOriginalTeam.textContent = player.originalTeam || 'IPL';
+  if (playerOriginTeam) playerOriginTeam.textContent = player.originalTeam || 'IPL';
   if (playerBasePrice) playerBasePrice.textContent = `Base: ${formatCurrency(player.basePrice)}`;
   if (playerRatingScore) playerRatingScore.textContent = player.rating || 75;
 
@@ -2319,6 +2342,89 @@ function renderMobileSheetStandings() {
     }
 
     mobileSheetContent.appendChild(card);
+  });
+}
+
+function populateModalStandings() {
+  const container = document.getElementById('modal-standings-content');
+  if (!container || !currentRoom) return;
+  container.innerHTML = '';
+
+  const teams = (currentRoom.standings && currentRoom.standings.length > 0)
+    ? currentRoom.standings 
+    : (currentRoom.teams || []);
+
+  if (teams.length === 0) {
+    container.innerHTML = '<div class="text-center py-8 text-xs text-slate-500 font-sans">No franchises claimed in this room yet.</div>';
+    return;
+  }
+
+  teams.forEach((team, index) => {
+    const teamId = team.franchiseId || team.teamId || team.id;
+    const teamName = team.teamName || team.name || teamId;
+    const teamLogo = team.logo || `/logos/${teamId}.svg`;
+    const purse = team.remainingPurse !== undefined ? team.remainingPurse : (team.purse || 0);
+    const squad = team.squad || [];
+    const totalPoints = team.totalPoints !== undefined ? team.totalPoints : squad.reduce((sum, p) => sum + (p.rating || 75), 0);
+    const rank = team.rank || (index + 1);
+    const isMe = myTeam && myTeam.franchiseId === teamId;
+
+    const card = document.createElement('div');
+    card.className = `p-3 rounded-2xl border transition bg-[#0d1324] ${
+      isMe ? 'border-amber-400/80 bg-amber-500/10' : 'border-white/10'
+    }`;
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between cursor-pointer modal-team-row">
+        <div class="flex items-center space-x-2.5">
+          <span class="font-mono font-bold text-xs ${rank === 1 ? 'text-amber-400 font-black' : rank === 2 ? 'text-slate-300 font-bold' : rank === 3 ? 'text-amber-600 font-bold' : 'text-slate-500'}">#${rank}</span>
+          <img src="${teamLogo}" alt="${teamId}" class="w-8 h-8 object-contain filter drop-shadow" />
+          <div>
+            <div class="font-display font-black text-xs text-white uppercase flex items-center space-x-1.5">
+              <span>${teamName}</span>
+              ${isMe ? '<span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black">YOU</span>' : ''}
+            </div>
+            <div class="text-[10px] text-slate-400 font-sans">${team.managerName || 'Manager'}</div>
+          </div>
+        </div>
+        <div class="text-right flex items-center space-x-2">
+          <div>
+            <div class="font-mono font-bold text-amber-400 text-xs">★ ${totalPoints} pts</div>
+            <div class="font-mono text-[10px] text-victoryEmerald font-semibold">${formatCurrency(purse)}</div>
+          </div>
+          <i class="fa-solid fa-chevron-down text-slate-500 text-xs accordion-arrow transition-transform"></i>
+        </div>
+      </div>
+      <div class="modal-squad-accordion hidden mt-2.5 pt-2.5 border-t border-white/10 space-y-1.5">
+        ${squad.length === 0 ? '<div class="text-[11px] text-slate-500 py-1">No players signed yet.</div>' : squad.map((p, idx) => `
+          <div class="flex items-center justify-between text-[11px] py-1 border-b border-white/5 last:border-b-0">
+            <div class="flex items-center space-x-2 truncate">
+              <span class="text-slate-500 font-mono text-[10px] w-4">${idx + 1}.</span>
+              <span class="font-semibold text-white truncate max-w-[140px]">${p.name}</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded font-bold font-display ${p.rating >= 90 ? 'bg-amber-400 text-slate-950 font-black' : 'bg-cyan-500/20 text-laserCyan'}">★ ${p.rating || 75}</span>
+            </div>
+            <span class="font-mono font-bold text-amber-400 text-[10px]">${formatCurrency(p.finalPrice || p.basePrice || 0)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    // Toggle squad accordion
+    const headerRow = card.querySelector('.modal-team-row');
+    const accordion = card.querySelector('.modal-squad-accordion');
+    const arrow = card.querySelector('.accordion-arrow');
+    headerRow.addEventListener('click', () => {
+      const isHidden = accordion.classList.contains('hidden');
+      if (isHidden) {
+        accordion.classList.remove('hidden');
+        arrow.classList.add('rotate-180');
+      } else {
+        accordion.classList.add('hidden');
+        arrow.classList.remove('rotate-180');
+      }
+    });
+
+    container.appendChild(card);
   });
 }
 
