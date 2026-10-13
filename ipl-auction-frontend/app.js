@@ -268,22 +268,40 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Click on user franchise pill in header opens quick squad modal
-  const pillTarget = e.target.closest('#userFranchisePill');
+  // Click on user franchise pill in header opens quick squad modal (EA FC + Legacy)
+  const pillTarget = e.target.closest('#userFranchisePill, #btn-header-roster');
   if (pillTarget && myTeam) {
     e.preventDefault();
     openSquadModal(myTeam);
     return;
   }
 
-  // Click on room badge copies code
-  const roomBadgeTarget = e.target.closest('#roomBadge');
+  // Click on room badge copies code (EA FC + Legacy)
+  const roomBadgeTarget = e.target.closest('#roomBadge, #btn-copy-code');
   if (roomBadgeTarget && currentRoom && currentRoom.code) {
     navigator.clipboard.writeText(currentRoom.code).then(() => {
       showToast(`Room code [${currentRoom.code}] copied to clipboard! 📋`, 'success');
     }).catch(() => {
       showToast(`Room code: ${currentRoom.code}`, 'info');
     });
+    return;
+  }
+
+  // Standings button in EA FC Top Bar
+  const standingsBtn = e.target.closest('#btn-open-standings');
+  if (standingsBtn) {
+    e.preventDefault();
+    openTeamsDrawer();
+    return;
+  }
+
+  // Settings Menu trigger in EA FC Top Bar
+  const menuTrigger = e.target.closest('#btn-open-menu');
+  if (menuTrigger) {
+    e.preventDefault();
+    e.stopPropagation();
+    const dropdown = document.getElementById('settingsDropdown');
+    if (dropdown) dropdown.classList.toggle('hidden');
     return;
   }
 });
@@ -497,44 +515,45 @@ const toggleVoiceBtn = document.getElementById('toggleVoiceBtn');
 const voiceIcon = document.getElementById('voiceIcon');
 
 // Player Card
-const playerName = document.getElementById('playerName');
+// Player Card (EA FC Trading Card HUD + Legacy fallbacks)
+const playerName = document.getElementById('player-name') || document.getElementById('playerName');
 const playerBatBowlStyle = document.getElementById('playerBatBowlStyle');
-const playerImage = document.getElementById('playerImage');
-const playerRoleBadge = document.getElementById('playerRoleBadge');
-const playerCountryBadge = document.getElementById('playerCountryBadge');
-const playerTierBadge = document.getElementById('playerTierBadge');
+const playerImage = document.getElementById('player-img') || document.getElementById('playerImage');
+const playerRoleBadge = document.getElementById('player-role-tag') || document.getElementById('playerRoleBadge');
+const playerCountryBadge = document.getElementById('player-country') || document.getElementById('playerCountryBadge');
+const playerTierBadge = document.getElementById('player-lot-tag') || document.getElementById('playerTierBadge');
 const playerOriginalTeam = document.getElementById('playerOriginalTeam');
-const playerBasePrice = document.getElementById('playerBasePrice');
-const playerRatingScore = document.getElementById('playerRatingScore');
-const auctionTimer = document.getElementById('auctionTimer');
+const playerBasePrice = document.getElementById('player-base-price') || document.getElementById('playerBasePrice');
+const playerRatingScore = document.getElementById('player-ovr') || document.getElementById('playerRatingScore');
+const auctionTimer = document.getElementById('timer-seconds') || document.getElementById('auctionTimer');
 const playerSoldWatermark = document.getElementById('playerSoldWatermark');
 const playerUnsoldWatermark = document.getElementById('playerUnsoldWatermark');
 
-const stat1 = document.getElementById('stat1');
-const stat2 = document.getElementById('stat2');
-const stat3 = document.getElementById('stat3');
-const stat4 = document.getElementById('stat4');
-const statLabel2 = document.getElementById('statLabel2');
-const statLabel3 = document.getElementById('statLabel3');
-const statLabel4 = document.getElementById('statLabel4');
+const stat1 = document.getElementById('stat-mat') || document.getElementById('stat1');
+const stat2 = document.getElementById('stat-runs') || document.getElementById('stat2');
+const stat3 = document.getElementById('stat-avg') || document.getElementById('stat3');
+const stat4 = document.getElementById('stat-sr') || document.getElementById('stat4');
+const statLabel2 = document.getElementById('stat-label-2') || document.getElementById('statLabel2');
+const statLabel3 = document.getElementById('stat-label-3') || document.getElementById('statLabel3');
+const statLabel4 = document.getElementById('stat-label-4') || document.getElementById('statLabel4');
 
-const currentBidAmount = document.getElementById('currentBidAmount');
-const highestBidderName = document.getElementById('highestBidderName');
+const currentBidAmount = document.getElementById('current-bid-amount') || document.getElementById('currentBidAmount');
+const highestBidderName = document.getElementById('leading-bidder-name') || document.getElementById('highestBidderName');
 const highestBidderBadge = document.getElementById('highestBidderBadge');
 const highestBidderLogoImg = document.getElementById('highestBidderLogoImg');
 const highestBidderPlaceholderIcon = document.getElementById('highestBidderPlaceholderIcon');
 
 // Action Area
-const btnPlaceBid = document.getElementById('btnPlaceBid');
-const bidButtonText = document.getElementById('bidButtonText');
-const btnFoldPlayer = document.getElementById('btnFoldPlayer');
-const foldButtonText = document.getElementById('foldButtonText');
+const btnPlaceBid = document.getElementById('btn-place-bid') || document.getElementById('btnPlaceBid');
+const bidButtonText = document.getElementById('bid-btn-text') || document.getElementById('bidButtonText');
+const btnFoldPlayer = document.getElementById('btn-fold') || document.getElementById('btnFoldPlayer');
+const foldButtonText = document.getElementById('fold-btn-text') || document.getElementById('foldButtonText');
 const foldStatusBar = document.getElementById('foldStatusBar');
-const foldCountDisplay = document.getElementById('foldCountDisplay');
+const foldCountDisplay = document.getElementById('footer-folds') || document.getElementById('foldCountDisplay');
 const foldStatusHint = document.getElementById('foldStatusHint');
 const bidStatusNotice = document.getElementById('bidStatusNotice');
-const myPurseAmount = document.getElementById('myPurseAmount');
-const mySquadCount = document.getElementById('mySquadCount');
+const myPurseAmount = document.getElementById('footer-purse') || document.getElementById('myPurseAmount');
+const mySquadCount = document.getElementById('footer-squad') || document.getElementById('mySquadCount');
 const myOverseasCount = document.getElementById('myOverseasCount');
 const liveFeedTicker = document.getElementById('liveFeedTicker');
 
@@ -974,6 +993,12 @@ function showView(viewName, roomCode = null) {
 
   updateHeaderContext(norm, roomCode);
 
+  if (norm === 'auction') {
+    document.body.classList.add('in-auction-view');
+  } else {
+    document.body.classList.remove('in-auction-view');
+  }
+
   if (norm === 'home' || norm === 'welcome') {
     currentViewState = 'home';
     if (viewWelcome) viewWelcome.classList.remove('hidden');
@@ -992,7 +1017,10 @@ function showView(viewName, roomCode = null) {
     }
   } else if (norm === 'auction') {
     currentViewState = 'auction';
-    if (viewAuction) viewAuction.classList.remove('hidden');
+    if (viewAuction) {
+      viewAuction.classList.remove('hidden');
+      viewAuction.classList.add('flex');
+    }
     if (currentRole === 'spectator') {
       setupSpectatorUI();
     } else {
@@ -1703,57 +1731,68 @@ function updateAuctionView(room) {
   const player = room.currentPlayer;
   if (!player) return;
 
-  playerSoldWatermark.classList.add('hidden');
-  playerUnsoldWatermark.classList.add('hidden');
+  if (playerSoldWatermark) playerSoldWatermark.classList.add('hidden');
+  if (playerUnsoldWatermark) playerUnsoldWatermark.classList.add('hidden');
 
-  playerName.textContent = player.name;
-  playerBatBowlStyle.textContent = `${player.stats.battingStyle || 'Right hand Bat'} • ${player.stats.bowlingStyle || 'Right arm Medium'}`;
-  playerRoleBadge.textContent = player.role;
-  playerCountryBadge.textContent = player.isOverseas ? `✈️ ${player.country}` : `🇮🇳 ${player.country}`;
-  playerTierBadge.innerHTML = `LOT #${room.auctionIndex + 1} • ${player.tier}`;
-  playerOriginalTeam.textContent = player.originalTeam || 'None';
-  playerBasePrice.textContent = formatCurrency(player.basePrice);
-  if (playerRatingScore) {
-    playerRatingScore.textContent = player.rating || 75;
-  }
+  if (playerName) playerName.textContent = player.name;
+  if (playerBatBowlStyle) playerBatBowlStyle.textContent = `${player.stats.battingStyle || 'Right hand Bat'} • ${player.stats.bowlingStyle || 'Right arm Medium'}`;
+  if (playerRoleBadge) playerRoleBadge.textContent = player.role;
+  if (playerCountryBadge) playerCountryBadge.textContent = player.isOverseas ? `✈️ ${player.country}` : `🇮🇳 ${player.country}`;
+  if (playerTierBadge) playerTierBadge.innerHTML = `LOT #${room.auctionIndex + 1} • ${player.tier}`;
+  if (playerOriginalTeam) playerOriginalTeam.textContent = player.originalTeam || 'None';
+  if (playerBasePrice) playerBasePrice.textContent = `Base: ${formatCurrency(player.basePrice)}`;
+  if (playerRatingScore) playerRatingScore.textContent = player.rating || 75;
 
-  playerImage.src = player.photo;
+  if (playerImage) playerImage.src = player.photo;
 
   // Real stats
-  stat1.textContent = player.stats.matches || 0;
+  if (stat1) stat1.textContent = player.stats.matches || 0;
   if (player.role === 'Bowler') {
-    statLabel2.textContent = 'Wickets';
-    stat2.textContent = player.stats.wickets || 0;
-    statLabel3.textContent = 'Economy';
-    stat3.textContent = player.stats.economy || '-';
-    statLabel4.textContent = 'Best';
-    stat4.textContent = player.stats.bestBowling || '-';
+    if (statLabel2) statLabel2.textContent = 'WKTS';
+    if (stat2) stat2.textContent = player.stats.wickets || 0;
+    if (statLabel3) statLabel3.textContent = 'ECON';
+    if (stat3) stat3.textContent = player.stats.economy || '-';
+    if (statLabel4) statLabel4.textContent = 'BEST';
+    if (stat4) stat4.textContent = player.stats.bestBowling || '-';
   } else {
-    statLabel2.textContent = 'Runs';
-    stat2.textContent = player.stats.runs || 0;
-    statLabel3.textContent = 'Average';
-    stat3.textContent = player.stats.average || '-';
-    statLabel4.textContent = 'Strike Rate';
-    stat4.textContent = player.stats.strikeRate || '-';
+    if (statLabel2) statLabel2.textContent = 'RUNS';
+    if (stat2) stat2.textContent = player.stats.runs || 0;
+    if (statLabel3) statLabel3.textContent = 'AVG';
+    if (stat3) stat3.textContent = player.stats.average || '-';
+    if (statLabel4) statLabel4.textContent = 'SR';
+    if (stat4) stat4.textContent = player.stats.strikeRate || '-';
   }
 
   // Current Bid
-  currentBidAmount.textContent = formatCurrency(room.currentBid);
+  if (currentBidAmount) currentBidAmount.textContent = formatCurrency(room.currentBid);
 
-  // Highest bidder
+  // Highest bidder tag
+  const leadingBidderDot = document.getElementById('leading-bidder-dot');
   if (room.highestBidder) {
-    highestBidderName.textContent = `${room.highestBidder.teamName} (${room.highestBidder.teamId}) - ${room.highestBidder.managerName}`;
-    highestBidderPlaceholderIcon.classList.add('hidden');
-    highestBidderLogoImg.classList.remove('hidden');
-    highestBidderLogoImg.src = room.highestBidder.logo || `/logos/${room.highestBidder.teamId}.svg`;
-    highestBidderBadge.style.backgroundColor = room.highestBidder.color || '#334155';
+    if (highestBidderName) highestBidderName.textContent = `${room.highestBidder.teamId} • ${room.highestBidder.managerName}`;
+    if (leadingBidderDot) leadingBidderDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block';
+    if (highestBidderPlaceholderIcon) highestBidderPlaceholderIcon.classList.add('hidden');
+    if (highestBidderLogoImg) {
+      highestBidderLogoImg.classList.remove('hidden');
+      highestBidderLogoImg.src = room.highestBidder.logo || `/logos/${room.highestBidder.teamId}.svg`;
+    }
+    if (highestBidderBadge) highestBidderBadge.style.backgroundColor = room.highestBidder.color || '#334155';
   } else {
-    highestBidderName.textContent = 'Waiting for opening bid (Hammer idle)';
-    highestBidderPlaceholderIcon.classList.remove('hidden');
-    highestBidderLogoImg.classList.add('hidden');
-    highestBidderBadge.style.backgroundColor = '#1E293B';
-    updateMatchActivityWire(`📢 LOT #${room.auctionIndex + 1}: ${player.name} (${player.role}, ${player.isOverseas ? '✈️ OS' : '🇮🇳 Ind'}) • Base: ${formatCurrency(player.basePrice)}`, 'lot');
+    if (highestBidderName) highestBidderName.textContent = 'WAITING FOR BID';
+    if (leadingBidderDot) leadingBidderDot.className = 'w-2 h-2 rounded-full bg-slate-500 inline-block';
+    if (highestBidderPlaceholderIcon) highestBidderPlaceholderIcon.classList.remove('hidden');
+    if (highestBidderLogoImg) highestBidderLogoImg.classList.add('hidden');
+    if (highestBidderBadge) highestBidderBadge.style.backgroundColor = '#1E293B';
+    updateMatchActivityWire(`📢 LOT #${room.auctionIndex + 1}: ${player.name} (${player.role}) • Base: ${formatCurrency(player.basePrice)}`, 'lot');
   }
+
+  // Synchronize EA FC Top Bar
+  const headerTeamBadge = document.getElementById('header-team-badge');
+  const headerPurseVal = document.getElementById('header-purse-val');
+  const headerRoomCode = document.getElementById('header-room-code');
+  if (headerTeamBadge) headerTeamBadge.textContent = myTeam ? myTeam.franchiseId : 'SPECTATOR';
+  if (headerPurseVal) headerPurseVal.textContent = myTeam ? formatCurrency(myTeam.purse) : 'Live';
+  if (headerRoomCode && room.code) headerRoomCode.textContent = `#${room.code}`;
 
   // Timer idle state if not started yet
   if (!room.isTimerRunning) {
@@ -2258,9 +2297,9 @@ drawerOverlay.addEventListener('click', () => {
 // =========================================================================
 // SPECTATOR FAN DECK CONTROLLER & CHEER REACTION MECHANICS
 // =========================================================================
-const managerActionDock = document.getElementById('managerActionDock');
-const spectatorFanDeck = document.getElementById('spectatorFanDeck');
-const spectatorAllegianceName = document.getElementById('spectatorAllegianceName');
+const managerActionDock = document.getElementById('manager-dock-controls') || document.getElementById('managerActionDock');
+const spectatorFanDeck = document.getElementById('spectator-dock-controls') || document.getElementById('spectatorFanDeck');
+const spectatorAllegianceName = document.getElementById('spectator-allegiance-name') || document.getElementById('spectatorAllegianceName');
 const cheerTeamTag = document.getElementById('cheerTeamTag');
 const decibelFill = document.getElementById('decibelFill');
 const decibelValueText = document.getElementById('decibelValueText');
@@ -2269,7 +2308,15 @@ const cheerReactionContainer = document.getElementById('cheerReactionContainer')
 
 function setupSpectatorUI() {
   if (managerActionDock) managerActionDock.classList.add('hidden');
-  if (spectatorFanDeck) spectatorFanDeck.classList.remove('hidden');
+  if (spectatorFanDeck) {
+    spectatorFanDeck.classList.remove('hidden');
+    spectatorFanDeck.classList.add('flex');
+  }
+
+  const headerTeamBadge = document.getElementById('header-team-badge');
+  const headerPurseVal = document.getElementById('header-purse-val');
+  if (headerTeamBadge) headerTeamBadge.textContent = 'FAN';
+  if (headerPurseVal) headerPurseVal.textContent = 'Spectator';
 
   if (userFranchisePill) {
     userFranchisePill.classList.remove('hidden');
@@ -2284,8 +2331,14 @@ function setupSpectatorUI() {
 }
 
 function setupManagerUI() {
-  if (spectatorFanDeck) spectatorFanDeck.classList.add('hidden');
-  if (managerActionDock) managerActionDock.classList.remove('hidden');
+  if (spectatorFanDeck) {
+    spectatorFanDeck.classList.add('hidden');
+    spectatorFanDeck.classList.remove('flex');
+  }
+  if (managerActionDock) {
+    managerActionDock.classList.remove('hidden');
+    managerActionDock.classList.add('flex');
+  }
   updateUserFranchisePill();
 }
 
