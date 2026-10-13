@@ -394,50 +394,26 @@ html, body {
   }
 
   /* Zero-scroll viewport for Live Auction Arena (Never overrides .hidden) */
-  #viewAuction:not(.hidden) {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.35rem;
-    height: calc(100dvh - 56px);
-    max-height: calc(100dvh - 56px);
-    overflow: hidden;
-    padding-bottom: env(safe-area-inset-bottom, 0.35rem);
+  #viewAuction:not(.hidden),
+  #view-auction:not(.hidden) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0.65rem !important;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom)) !important;
   }
 
-  /* Hero Player Arena Stage: flex 1 with min-height 0 to prevent mobile overflow */
-  #viewAuction > .esport-panel-elevated {
-    flex: 1 1 0%;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 0.6rem !important;
-    border-radius: 1.25rem !important;
-    overflow: hidden;
+  /* Hide default top site header when active in EA FC Auction View */
+  body.in-auction-view > header {
+    display: none !important;
   }
-
-  /* Compact player avatar on mobile */
-  #viewAuction #playerImage {
-    object-position: top center;
-  }
-
-  /* Mobile action dock ergonomics */
-  #managerActionDock {
-    margin-top: auto;
-  }
-
-  /* Thumb-friendly mobile buttons (75% / 25% layout) */
-  #btnPlaceBid {
-    min-height: 48px;
-    font-size: 1.05rem !important;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-  }
-  #btnFoldPlayer {
-    min-height: 48px;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+  body.in-auction-view > main {
+    padding: 0 !important;
+    max-width: 100% !important;
   }
 }
 
