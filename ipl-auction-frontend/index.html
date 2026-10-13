@@ -117,10 +117,10 @@
       </button>
 
       <!-- Standings Drawer Toggle (Auction & Lobby) -->
-      <button id="toggleDrawerBtn" class="hidden px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#0e172e] hover:bg-[#162347] text-slate-300 text-xs font-medium border border-white/10 transition items-center space-x-1.5 active:scale-95 cursor-pointer">
+      <button id="toggleDrawerBtn" class="hidden px-2 sm:px-3 py-1.5 rounded-xl bg-[#0e172e] hover:bg-[#162347] text-slate-300 text-xs font-medium border border-white/10 transition items-center space-x-1 sm:space-x-1.5 active:scale-95 cursor-pointer flex-shrink-0">
         <i class="fa-solid fa-trophy text-amber-400 text-xs"></i>
-        <span class="hidden sm:inline font-display uppercase font-bold tracking-wider">Standings</span>
-        <span id="teamsCountBadge" class="bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded font-black text-[10px]">0</span>
+        <span class="font-display uppercase font-bold tracking-wider text-[11px] sm:text-xs">Standings</span>
+        <span id="teamsCountBadge" class="bg-amber-400 text-slate-950 px-1 py-0.2 rounded font-black text-[9px] sm:text-[10px]">0</span>
       </button>
 
       <!-- Settings Dropdown Button -->
@@ -511,18 +511,18 @@
           </div>
         </div>
 
-        <!-- Center Player Profile & Collectible Presentation (Vertical on Mobile, Horizontal on Desktop) -->
-        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-2.5 sm:gap-5 my-1 sm:my-2 relative z-10 text-center sm:text-left">
-          <!-- Player Headshot with Rim Lighting & Watermarks -->
-          <div class="relative w-24 h-24 sm:w-36 sm:h-36 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-amber-400/40 bg-[#070b18] shadow-2xl flex-shrink-0 group mx-auto sm:mx-0">
+        <!-- Center Player Profile & Collectible Presentation (Horizontal Ergonomic Layout) -->
+        <div class="flex flex-row items-center gap-3 sm:gap-5 my-1 sm:my-2 relative z-10 text-left">
+          <!-- Player Headshot (68x68 on mobile, 144x144 on desktop) -->
+          <div class="relative w-[68px] h-[68px] sm:w-36 sm:h-36 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-amber-400/40 bg-[#070b18] shadow-2xl flex-shrink-0 group">
             <img id="playerImage" src="" alt="Player" class="w-full h-full object-cover object-top transition duration-300 group-hover:scale-105" onerror="this.src='/icons/player_avatar.svg'" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none"></div>
             
             <!-- Dynamic Sold/Unsold Watermarks -->
-            <div id="playerSoldWatermark" class="hidden absolute inset-0 bg-red-600/90 flex items-center justify-center font-black font-display text-xl sm:text-3xl uppercase tracking-widest text-white shadow-2xl border-2 sm:border-4 border-white">
+            <div id="playerSoldWatermark" class="hidden absolute inset-0 bg-red-600/90 flex items-center justify-center font-black font-display text-sm sm:text-3xl uppercase tracking-widest text-white shadow-2xl border sm:border-4 border-white">
               SOLD
             </div>
-            <div id="playerUnsoldWatermark" class="hidden absolute inset-0 bg-slate-900/95 flex items-center justify-center font-black font-display text-base sm:text-2xl uppercase tracking-widest text-slate-300 border-2 sm:border-4 border-slate-600">
+            <div id="playerUnsoldWatermark" class="hidden absolute inset-0 bg-slate-900/95 flex items-center justify-center font-black font-display text-xs sm:text-2xl uppercase tracking-widest text-slate-300 border sm:border-4 border-slate-600">
               UNSOLD
             </div>
           </div>
@@ -530,10 +530,10 @@
           <!-- Player Details & Real Stats Telemetry -->
           <div class="flex-1 min-w-0 w-full">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-1 mb-0.5">
-              <h2 id="playerName" class="text-xl sm:text-3xl font-black font-display text-white tracking-wide uppercase truncate">
+              <h2 id="playerName" class="text-lg sm:text-3xl font-black font-display text-white tracking-wide uppercase truncate">
                 Virat Kohli
               </h2>
-              <div id="playerBatBowlStyle" class="text-[10px] sm:text-xs text-slate-400 font-mono truncate">
+              <div id="playerBatBowlStyle" class="hidden sm:block text-[10px] sm:text-xs text-slate-400 font-mono truncate">
                 Right hand Bat • Right arm Medium
               </div>
             </div>
@@ -602,45 +602,37 @@
 
         <!-- DOCK 1: FRANCHISE MANAGER BIDDING CONTROLS -->
         <div id="managerActionDock" class="w-full max-w-2xl flex flex-col space-y-2 sm:space-y-3">
-          <!-- Action Buttons Container (BID + FOLD) with 80/20 Mobile Layout -->
+          <!-- Action Buttons Container (BID + FOLD) with 75/25 Ergonomic Thumb Layout -->
           <div class="w-full flex flex-row gap-2 sm:gap-3">
-            <!-- MASSIVE TACTILE BID BUTTON -->
+            <!-- MASSIVE TACTILE BID BUTTON (75% width on mobile) -->
             <button 
               id="btnPlaceBid" 
-              class="shimmer-btn tactile-btn flex-1 py-3.5 sm:py-5 px-3 sm:px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 text-slate-950 font-black font-display text-base sm:text-2xl uppercase tracking-wider shadow-2xl shadow-amber-500/30 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none border-t border-white/40"
+              class="shimmer-btn tactile-btn flex-[3] py-3 sm:py-4 px-3 sm:px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 text-slate-950 font-black font-display text-sm sm:text-xl uppercase tracking-wider shadow-2xl shadow-amber-500/30 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none border-t border-white/40"
             >
-              <i class="fa-solid fa-gavel text-base sm:text-xl"></i>
-              <span id="bidButtonText">BID (Base ₹2.00 Cr)</span>
+              <i class="fa-solid fa-gavel text-sm sm:text-lg"></i>
+              <span id="bidButtonText">OPEN BID (₹1.00 CR)</span>
             </button>
 
-            <!-- FOLD / PASS BUTTON (Strictly disabled for highest bidder) -->
+            <!-- FOLD / PASS BUTTON (25% width on mobile) -->
             <button 
               id="btnFoldPlayer" 
-              class="tactile-btn w-24 sm:w-44 py-3.5 sm:py-5 px-2 sm:px-4 rounded-2xl bg-[#0d1324] border-2 border-white/15 hover:border-rose-500/60 hover:bg-rose-500/10 text-slate-300 hover:text-rose-300 font-black font-display text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center space-x-1 cursor-pointer shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              class="tactile-btn flex-1 py-3 sm:py-4 px-2 sm:px-3 rounded-2xl bg-[#0d1324] border-2 border-white/15 hover:border-rose-500/60 hover:bg-rose-500/10 text-slate-300 hover:text-rose-300 font-black font-display text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center space-x-1 cursor-pointer shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <i class="fa-solid fa-hand text-rose-400 text-xs sm:text-sm"></i>
               <span id="foldButtonText">FOLD</span>
             </button>
           </div>
 
-          <!-- Consensus Fold Progress Bar & Telemetry -->
-          <div class="w-full flex flex-col sm:flex-row items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[#080d1e] border border-white/10 gap-1 text-[11px] sm:text-xs text-slate-400 font-sans shadow-inner">
-            <div id="foldStatusBar" class="flex items-center space-x-1.5">
-              <i class="fa-solid fa-users-slash text-amber-400 text-xs"></i>
-              <span class="font-display uppercase font-bold tracking-wider">Consensus:</span>
-              <span id="foldCountDisplay" class="font-bold text-white font-mono">0/0 Teams</span>
-              <span class="text-slate-600 hidden sm:inline">•</span>
-              <span id="foldStatusHint" class="text-slate-500 text-[10px] sm:text-[11px] font-mono hidden sm:inline">Instant hammer if all pass</span>
-            </div>
-
-            <!-- Current Team Telemetry Strip -->
-            <div class="flex items-center space-x-2.5 font-mono text-[10px] sm:text-xs">
-              <div>Purse: <span id="myPurseAmount" class="font-bold text-victoryEmerald">₹100.00 Cr</span></div>
+          <!-- Status Sub-bar: Single line beneath buttons -->
+          <div class="w-full flex items-center justify-between px-3 sm:px-4 py-1.5 rounded-xl bg-[#080d1e] border border-white/10 text-[10px] sm:text-xs text-slate-300 font-mono shadow-inner whitespace-nowrap overflow-x-auto">
+            <div class="flex items-center space-x-2">
+              <span>Squad: <b id="mySquadCount" class="text-white">0/25</b> (<span id="myOverseasCount" class="text-laserCyan">0</span> OS)</span>
               <span class="text-slate-600">•</span>
-              <div>Squad: <span id="mySquadCount" class="font-bold text-white font-mono">0/25</span></div>
+              <span>Purse: <b id="myPurseAmount" class="text-victoryEmerald">₹100.00 Cr</b></span>
               <span class="text-slate-600">•</span>
-              <div>OS: <span id="myOverseasCount" class="font-bold text-laserCyan font-mono">0/8</span></div>
+              <span>Passed: <b id="foldCountDisplay" class="text-amber-400">0/1 Teams</b></span>
             </div>
+            <span id="foldStatusHint" class="hidden sm:inline text-slate-500 text-[10px]">Instant hammer if all pass</span>
           </div>
         </div>
 
@@ -662,27 +654,23 @@
             <!-- Populated by JS: CSK, RCB, MI, KKR... -->
           </div>
 
-          <!-- 5 Tactile Cheer Buttons -->
-          <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
-            <button data-cheer="horn" data-emoji="🎺" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-amber-400/30 hover:border-amber-400 text-amber-300 font-display font-black text-[10px] sm:text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
-              <span class="text-base sm:text-xl">🎺</span>
-              <span class="mt-0.5">Horn</span>
+          <!-- 4 Large Tactile Emoji Reaction Buttons -->
+          <div class="grid grid-cols-4 gap-2">
+            <button data-cheer="horn" data-emoji="🎺" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-amber-400/30 hover:border-amber-400 text-amber-300 font-display font-black text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
+              <span class="text-xl sm:text-2xl">🎺</span>
+              <span class="mt-1">Horn</span>
             </button>
-            <button data-cheer="fire" data-emoji="🔥" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-rose-500/30 hover:border-rose-500 text-rose-300 font-display font-black text-[10px] sm:text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
-              <span class="text-base sm:text-xl">🔥</span>
-              <span class="mt-0.5">Fire</span>
+            <button data-cheer="fire" data-emoji="🔥" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-rose-500/30 hover:border-rose-500 text-rose-300 font-display font-black text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
+              <span class="text-xl sm:text-2xl">🔥</span>
+              <span class="mt-1">Fire</span>
             </button>
-            <button data-cheer="applause" data-emoji="👏" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-emerald-500/30 hover:border-emerald-500 text-emerald-300 font-display font-black text-[10px] sm:text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
-              <span class="text-base sm:text-xl">👏</span>
-              <span class="mt-0.5">Cheer</span>
+            <button data-cheer="applause" data-emoji="👏" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-emerald-500/30 hover:border-emerald-500 text-emerald-300 font-display font-black text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
+              <span class="text-xl sm:text-2xl">👏</span>
+              <span class="mt-1">Cheer</span>
             </button>
-            <button data-cheer="lightning" data-emoji="⚡" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-cyan-400/30 hover:border-cyan-400 text-laserCyan font-display font-black text-[10px] sm:text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
-              <span class="text-base sm:text-xl">⚡</span>
-              <span class="mt-0.5">Hype</span>
-            </button>
-            <button data-cheer="chant" data-emoji="🏆" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-yellow-400/30 hover:border-yellow-400 text-yellow-300 font-display font-black text-[10px] sm:text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
-              <span class="text-base sm:text-xl">🏆</span>
-              <span class="mt-0.5">Chant</span>
+            <button data-cheer="lightning" data-emoji="⚡" class="cheer-btn tactile-btn p-2 sm:p-3 rounded-xl bg-[#0e172e] border border-cyan-400/30 hover:border-cyan-400 text-laserCyan font-display font-black text-xs uppercase flex flex-col items-center justify-center transition active:scale-90">
+              <span class="text-xl sm:text-2xl">⚡</span>
+              <span class="mt-1">Hype</span>
             </button>
           </div>
 
