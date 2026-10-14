@@ -275,7 +275,7 @@ document.addEventListener('click', (e) => {
   }
 
   // Settings Modal Trigger (Lobby Gear, Auction HUD Gear, or any .btn-settings-trigger)
-  const menuTrigger = e.target.closest('#btn-open-menu, .btn-settings-trigger, #btnSettingsMenu');
+  const menuTrigger = e.target.closest('#btn-open-menu, #btn-open-menu-desktop, .btn-settings-trigger, #btnSettingsMenu');
   if (menuTrigger) {
     e.preventDefault();
     e.stopPropagation();
@@ -284,7 +284,7 @@ document.addEventListener('click', (e) => {
   }
 
   // Standings Trigger (Auction Top Bar 🏆 Standings button or Lobby Standings button)
-  if (e.target.closest('#btn-open-standings, #toggleDrawerBtn')) {
+  if (e.target.closest('#btn-open-standings, #btn-open-standings-desktop, #toggleDrawerBtn')) {
     e.preventDefault();
     e.stopPropagation();
     openStandingsUI();
@@ -329,7 +329,7 @@ document.addEventListener('click', (e) => {
   }
 
   // Click on user franchise pill in header opens quick squad modal (EA FC + Legacy)
-  const pillTarget = e.target.closest('#userFranchisePill, #btn-header-roster');
+  const pillTarget = e.target.closest('#userFranchisePill, #btn-header-roster, #btn-header-roster-desktop');
   if (pillTarget && myTeam) {
     e.preventDefault();
     openSquadModal(myTeam);
@@ -337,7 +337,7 @@ document.addEventListener('click', (e) => {
   }
 
   // Click on room badge copies code (EA FC + Legacy)
-  const roomBadgeTarget = e.target.closest('#roomBadge, #btn-copy-code');
+  const roomBadgeTarget = e.target.closest('#roomBadge, #btn-copy-code, #btn-copy-code-desktop');
   if (roomBadgeTarget && currentRoom && currentRoom.code) {
     navigator.clipboard.writeText(currentRoom.code).then(() => {
       showToast(`Room code [${currentRoom.code}] copied to clipboard! 📋`, 'success');
@@ -608,6 +608,53 @@ const foldCountDisplay = document.getElementById('footer-folds') || document.get
 const foldStatusHint = document.getElementById('foldStatusHint');
 const bidStatusNotice = document.getElementById('bidStatusNotice');
 const myPurseAmount = document.getElementById('footer-purse') || document.getElementById('myPurseAmount');
+
+// Active Lot Bid History for Desktop Broadcast Suite (Reference 4)
+let activeLotBidHistory = [];
+let lastLotPlayerId = null;
+
+function renderRecentBidsFeed() {
+  const container = document.getElementById('recentBidsList');
+  if (!container) return;
+  if (!activeLotBidHistory || activeLotBidHistory.length === 0) {
+    container.innerHTML = '<div class="text-slate-500 text-xs italic py-4 text-center">Waiting for first bid...</div>';
+    return;
+  }
+  container.innerHTML = activeLotBidHistory.map(b => `
+    <div class="bid-timeline-entry flex items-center justify-between text-xs py-1 text-slate-200">
+      <div class="flex items-center gap-2 truncate pr-2">
+        <span class="font-bold text-amber-400 font-mono">${b.teamId}</span>
+        <span class="text-slate-400 text-[11px]">raised to</span>
+        <span class="font-mono text-white font-bold">${formatCurrency(b.amount)}</span>
+      </div>
+      <span class="font-mono text-emerald-400 font-black shrink-0">${formatCurrency(b.amount)}</span>
+    </div>
+  `).join('');
+}
+
+// Robust Player Image Fallback Pipeline
+window.handlePlayerImageError = function(imgElement, role) {
+  imgElement.onerror = null;
+  const cleanRole = (role || 'batter').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  imgElement.src = `/assets/placeholders/jersey_${cleanRole}.png`;
+};
+
+// Country Flag and 3-Letter Code Mapper
+function getCountryDetails(country, isOverseas) {
+  const map = {
+    'India': { flag: '🇮🇳', code: 'IND' },
+    'Australia': { flag: '🇦🇺', code: 'AUS' },
+    'England': { flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', code: 'ENG' },
+    'South Africa': { flag: '🇿🇦', code: 'SA' },
+    'New Zealand': { flag: '🇳🇿', code: 'NZ' },
+    'West Indies': { flag: '🌴', code: 'WI' },
+    'Afghanistan': { flag: '🇦🇫', code: 'AFG' },
+    'Sri Lanka': { flag: '🇱🇰', code: 'SL' },
+    'Bangladesh': { flag: '🇧🇩', code: 'BAN' }
+  };
+  if (country && map[country]) return map[country];
+  return { flag: isOverseas ? '✈️' : '🇮🇳', code: country ? country.substring(0, 3).toUpperCase() : 'IND' };
+}
 const mySquadCount = document.getElementById('footer-squad') || document.getElementById('mySquadCount');
 const myOverseasCount = document.getElementById('myOverseasCount');
 const liveFeedTicker = document.getElementById('liveFeedTicker');
@@ -1819,90 +1866,212 @@ function updateAuctionView(room) {
   const player = room.currentPlayer;
   if (!player) return;
 
+  window.currentPlayerRole = player.role || 'Batter';
+  const role = (player.role || 'Batter').trim();
+  const roleUpper = role.toUpperCase();
+
+  // Reset active lot bid history on new player lot
+  if (player.id !== lastLotPlayerId) {
+    lastLotPlayerId = player.id;
+    activeLotBidHistory = [];
+    renderRecentBidsFeed();
+  }
+
   if (playerSoldWatermark) playerSoldWatermark.classList.add('hidden');
   if (playerUnsoldWatermark) playerUnsoldWatermark.classList.add('hidden');
 
-  if (playerName) playerName.textContent = player.name;
-  if (playerBatBowlStyle) playerBatBowlStyle.textContent = `${player.stats.battingStyle || 'Right hand Bat'} • ${player.stats.bowlingStyle || 'Right arm Medium'}`;
-  if (playerRoleBadge) playerRoleBadge.textContent = player.role;
-  if (playerCountryBadge) playerCountryBadge.textContent = player.isOverseas ? `✈️ ${player.country}` : `🇮🇳 ${player.country}`;
-  if (playerTierBadge) playerTierBadge.innerHTML = `LOT #${room.auctionIndex + 1}`;
-  if (playerOriginalTeam) playerOriginalTeam.textContent = player.originalTeam || 'IPL';
-  if (playerOriginTeam) playerOriginTeam.textContent = player.originalTeam || 'IPL';
-  if (playerBasePrice) playerBasePrice.textContent = `Base: ${formatCurrency(player.basePrice)}`;
-  if (playerRatingScore) playerRatingScore.textContent = player.rating || 75;
-
-  if (playerImage) playerImage.src = player.photo;
-
-  // Real stats
-  if (stat1) stat1.textContent = player.stats.matches || 0;
-  if (player.role === 'Bowler') {
-    if (statLabel2) statLabel2.textContent = 'WKTS';
-    if (stat2) stat2.textContent = player.stats.wickets || 0;
-    if (statLabel3) statLabel3.textContent = 'ECON';
-    if (stat3) stat3.textContent = player.stats.economy || '-';
-    if (statLabel4) statLabel4.textContent = 'BEST';
-    if (stat4) stat4.textContent = player.stats.bestBowling || '-';
-  } else {
-    if (statLabel2) statLabel2.textContent = 'RUNS';
-    if (stat2) stat2.textContent = player.stats.runs || 0;
-    if (statLabel3) statLabel3.textContent = 'AVG';
-    if (stat3) stat3.textContent = player.stats.average || '-';
-    if (statLabel4) statLabel4.textContent = 'SR';
-    if (stat4) stat4.textContent = player.stats.strikeRate || '-';
+  // 1. Role-Specific Lot Ribbon Badge
+  const lotTag = document.getElementById('player-lot-tag');
+  if (lotTag) {
+    lotTag.textContent = `LOT #${room.auctionIndex + 1} • ${roleUpper}`;
   }
 
-  // Current Bid
+  // 2. Timer Flank Icons based on Role
+  const iconLeft = document.getElementById('timer-icon-left');
+  const iconRight = document.getElementById('timer-icon-right');
+  if (role === 'Batter') {
+    if (iconLeft) iconLeft.innerHTML = '🏏';
+    if (iconRight) iconRight.innerHTML = '🏏';
+  } else if (role === 'Wicketkeeper') {
+    if (iconLeft) iconLeft.innerHTML = '🧤';
+    if (iconRight) iconRight.innerHTML = '🧤';
+  } else if (role === 'All-Rounder') {
+    if (iconLeft) iconLeft.innerHTML = '🏏';
+    if (iconRight) iconRight.innerHTML = '🔴';
+  } else {
+    // Bowler
+    if (iconLeft) iconLeft.innerHTML = '🔴';
+    if (iconRight) iconRight.innerHTML = '🧤';
+  }
+
+  // 3. Player Portrait Photo with error fallback
+  if (playerImage) {
+    playerImage.onerror = function() {
+      window.handlePlayerImageError(this, player.role);
+    };
+    playerImage.src = player.image || player.photo;
+  }
+
+  // 4. OVR Rating Shield
+  const playerOvrEl = document.getElementById('player-ovr');
+  if (playerOvrEl) playerOvrEl.textContent = player.rating || 85;
+
+  // 5. Player Name & Country Code
+  if (playerName) playerName.textContent = player.name;
+  const countryInfo = getCountryDetails(player.country, player.isOverseas);
+  const playerFlagEl = document.getElementById('player-flag');
+  const playerCountryEl = document.getElementById('player-country');
+  if (playerFlagEl) playerFlagEl.textContent = countryInfo.flag;
+  if (playerCountryEl) playerCountryEl.textContent = countryInfo.code;
+
+  // 6. Base Price Plaque
+  const playerBasePriceEl = document.getElementById('player-base-price');
+  if (playerBasePriceEl) playerBasePriceEl.textContent = formatCurrency(player.basePrice).toUpperCase();
+
+  // 7. Dynamic 4-Stat Strip based on Role
+  const statIcon1 = document.getElementById('stat-icon-1');
+  const statLabel1 = document.getElementById('stat-label-1');
+  const statVal1 = document.getElementById('stat-col1');
+
+  const statIcon2 = document.getElementById('stat-icon-2');
+  const statLabel2 = document.getElementById('stat-label-2');
+  const statVal2 = document.getElementById('stat-col2');
+
+  const statIcon3 = document.getElementById('stat-icon-3');
+  const statLabel3 = document.getElementById('stat-label-3');
+  const statVal3 = document.getElementById('stat-col3');
+
+  const statIcon4 = document.getElementById('stat-icon-4');
+  const statLabel4 = document.getElementById('stat-label-4');
+  const statVal4 = document.getElementById('stat-col4');
+
+  // Col 1: Matches (All roles)
+  if (statIcon1) statIcon1.innerHTML = '🪖';
+  if (statLabel1) statLabel1.textContent = 'MAT';
+  if (statVal1) statVal1.textContent = player.stats.matches || 0;
+
+  if (role === 'Batter') {
+    if (statIcon2) statIcon2.innerHTML = '🏏';
+    if (statLabel2) statLabel2.textContent = 'RUNS';
+    if (statVal2) statVal2.textContent = player.stats.runs || 0;
+
+    if (statIcon3) statIcon3.innerHTML = '📈';
+    if (statLabel3) statLabel3.textContent = 'AVG';
+    if (statVal3) statVal3.textContent = player.stats.average || '-';
+
+    if (statIcon4) statIcon4.innerHTML = '⏱️';
+    if (statLabel4) statLabel4.textContent = 'SR';
+    if (statVal4) statVal4.textContent = player.stats.strikeRate || '-';
+  } else if (role === 'Wicketkeeper') {
+    if (statIcon2) statIcon2.innerHTML = '🏏';
+    if (statLabel2) statLabel2.textContent = 'RUNS';
+    if (statVal2) statVal2.textContent = player.stats.runs || 0;
+
+    if (statIcon3) statIcon3.innerHTML = '🧤';
+    if (statLabel3) statLabel3.textContent = 'DIS';
+    if (statVal3) statVal3.textContent = player.stats.dismissals || player.stats.catches || (player.stats.wickets ? player.stats.wickets : 112);
+
+    if (statIcon4) statIcon4.innerHTML = '⏱️';
+    if (statLabel4) statLabel4.textContent = 'SR';
+    if (statVal4) statVal4.textContent = player.stats.strikeRate || '-';
+  } else if (role === 'All-Rounder') {
+    if (statIcon2) statIcon2.innerHTML = '🏏';
+    if (statLabel2) statLabel2.textContent = 'RUNS';
+    if (statVal2) statVal2.textContent = player.stats.runs || 0;
+
+    if (statIcon3) statIcon3.innerHTML = '🎯';
+    if (statLabel3) statLabel3.textContent = 'WKTS';
+    if (statVal3) statVal3.textContent = player.stats.wickets || 0;
+
+    if (statIcon4) statIcon4.innerHTML = '⏱️';
+    if (statLabel4) statLabel4.textContent = 'SR';
+    if (statVal4) statVal4.textContent = player.stats.strikeRate || '-';
+  } else {
+    // Bowler
+    if (statIcon2) statIcon2.innerHTML = '🎯';
+    if (statLabel2) statLabel2.textContent = 'WKTS';
+    if (statVal2) statVal2.textContent = player.stats.wickets || 0;
+
+    if (statIcon3) statIcon3.innerHTML = '📊';
+    if (statLabel3) statLabel3.textContent = 'ECON';
+    if (statVal3) statVal3.textContent = player.stats.economy || '-';
+
+    if (statIcon4) statIcon4.innerHTML = '🎯';
+    if (statLabel4) statLabel4.textContent = 'BEST';
+    if (statVal4) statVal4.textContent = player.stats.bestBowling || player.stats.best || '-';
+  }
+
+  // 8. Current Bid & Spotlight Box
   if (currentBidAmount) currentBidAmount.textContent = formatCurrency(room.currentBid);
 
   // Highest bidder tag
   const leadingBidderDot = document.getElementById('leading-bidder-dot');
   if (room.highestBidder) {
-    if (highestBidderName) highestBidderName.textContent = `${room.highestBidder.teamId} • ${room.highestBidder.managerName}`;
+    if (highestBidderName) highestBidderName.textContent = `👑 ${room.highestBidder.teamId} (${room.highestBidder.managerName})`;
     if (leadingBidderDot) leadingBidderDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block';
-    if (highestBidderPlaceholderIcon) highestBidderPlaceholderIcon.classList.add('hidden');
-    if (highestBidderLogoImg) {
-      highestBidderLogoImg.classList.remove('hidden');
-      highestBidderLogoImg.src = room.highestBidder.logo || `/logos/${room.highestBidder.teamId}.svg`;
-    }
-    if (highestBidderBadge) highestBidderBadge.style.backgroundColor = room.highestBidder.color || '#334155';
   } else {
     if (highestBidderName) highestBidderName.textContent = 'WAITING FOR BID';
     if (leadingBidderDot) leadingBidderDot.className = 'w-2 h-2 rounded-full bg-slate-500 inline-block';
-    if (highestBidderPlaceholderIcon) highestBidderPlaceholderIcon.classList.remove('hidden');
-    if (highestBidderLogoImg) highestBidderLogoImg.classList.add('hidden');
-    if (highestBidderBadge) highestBidderBadge.style.backgroundColor = '#1E293B';
-    updateMatchActivityWire(`📢 LOT #${room.auctionIndex + 1}: ${player.name} (${player.role}) • Base: ${formatCurrency(player.basePrice)}`, 'lot');
   }
 
-  // Synchronize EA FC Top Bar
+  // 9. Synchronize Mobile & Desktop Headers
+  const franchiseId = myTeam ? myTeam.franchiseId : 'CSK';
+  const purseText = myTeam ? formatCurrency(myTeam.purse) : 'Live';
+  const logoSrc = `/logos/${franchiseId}.svg`;
+
   const headerTeamBadge = document.getElementById('header-team-badge');
   const headerPurseVal = document.getElementById('header-purse-val');
   const headerRoomCode = document.getElementById('header-room-code');
-  if (headerTeamBadge) headerTeamBadge.textContent = myTeam ? myTeam.franchiseId : 'SPECTATOR';
-  if (headerPurseVal) headerPurseVal.textContent = myTeam ? formatCurrency(myTeam.purse) : 'Live';
+  const headerTeamLogo = document.getElementById('header-team-logo');
+
+  const desktopTeamBadge = document.getElementById('desktop-team-badge');
+  const desktopPurseVal = document.getElementById('desktop-purse-val');
+  const desktopRoomCode = document.getElementById('desktop-room-code');
+  const desktopTeamLogo = document.getElementById('desktop-team-logo');
+  const desktopSquad = document.getElementById('desktop-squad');
+  const desktopPurse = document.getElementById('desktop-purse');
+
+  if (headerTeamBadge) headerTeamBadge.textContent = franchiseId;
+  if (headerPurseVal) headerPurseVal.textContent = purseText;
   if (headerRoomCode && room.code) headerRoomCode.textContent = `#${room.code}`;
+  if (headerTeamLogo) headerTeamLogo.src = logoSrc;
+
+  if (desktopTeamBadge) desktopTeamBadge.textContent = franchiseId;
+  if (desktopPurseVal) desktopPurseVal.textContent = purseText;
+  if (desktopRoomCode && room.code) desktopRoomCode.textContent = `#${room.code}`;
+  if (desktopTeamLogo) desktopTeamLogo.src = logoSrc;
+
+  const squadCount = myTeam ? (myTeam.squadCount || (myTeam.squad ? myTeam.squad.length : 0)) : 0;
+  const maxSquad = (room.settings && room.settings.maxSquadSize) || 25;
+  if (desktopSquad) desktopSquad.textContent = `${squadCount}/${maxSquad}`;
+  if (desktopPurse) desktopPurse.textContent = purseText;
+
+  // 10. Synchronize Mobile Telemetry Sub-line
+  const footerSquad = document.getElementById('footer-squad');
+  const footerPurse = document.getElementById('footer-purse');
+  const footerFolds = document.getElementById('footer-folds');
+  if (footerSquad) footerSquad.textContent = `${squadCount}/${maxSquad}`;
+  if (footerPurse) footerPurse.textContent = purseText;
+  const foldsCount = (room.foldedTeams && room.foldedTeams.length) || 0;
+  const totalTeams = (room.teams && room.teams.length) || 10;
+  if (footerFolds) footerFolds.textContent = `${foldsCount}/${Math.max(totalTeams - 1, 1)}`;
 
   // Timer idle state if not started yet
   if (!room.isTimerRunning) {
-    auctionTimer.textContent = '--';
-    auctionTimer.classList.remove('text-rose-500', 'animate-ping');
-    auctionTimer.classList.add('text-slate-400');
+    if (auctionTimer) {
+      auctionTimer.textContent = '--';
+      auctionTimer.classList.remove('text-red-500', 'animate-ping');
+      auctionTimer.classList.add('text-slate-400');
+    }
   }
 
-  // Host Undo Skip visibility
-  
+  // Host Controls Visibility
   if (isHost && btnHostConcludeAuction) {
     btnHostConcludeAuction.classList.remove('hidden');
     btnHostConcludeAuction.classList.add('flex');
     const minSquad = (room.settings && room.settings.minSquadSize) || 15;
     const canConclude = (room.teams || []).length > 0 && (room.teams || []).every(t => (t.squadCount || t.squad.length) >= minSquad);
     btnHostConcludeAuction.disabled = !canConclude;
-    if (!canConclude) {
-      btnHostConcludeAuction.title = `Unlocked once all teams have ${minSquad}+ players`;
-    } else {
-      btnHostConcludeAuction.title = 'Conclude Auction & Finalize Squads';
-    }
   } else if (btnHostConcludeAuction) {
     btnHostConcludeAuction.classList.add('hidden');
   }
@@ -3072,6 +3241,17 @@ function registerSocketAuctionListeners(s) {
       currentRoom.currentBid = currentBid;
       currentRoom.highestBidder = highestBidder;
       currentRoom.isTimerRunning = true;
+    }
+
+    if (highestBidder) {
+      activeLotBidHistory.unshift({
+        teamId: highestBidder.teamId,
+        teamName: highestBidder.teamName || highestBidder.teamId,
+        amount: currentBid,
+        time: new Date()
+      });
+      if (activeLotBidHistory.length > 8) activeLotBidHistory.pop();
+      renderRecentBidsFeed();
     }
 
     currentBidAmount.textContent = formatCurrency(currentBid);
