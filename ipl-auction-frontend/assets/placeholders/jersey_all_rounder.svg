@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <defs>
+    <linearGradient id="bgGrad_All-Rounder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="jerseyGrad_All-Rounder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#701a75"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="240" rx="16" fill="url(#bgGrad_All-Rounder)"/>
+  <!-- Head Silhouette -->
+  <circle cx="100" cy="55" r="26" fill="#cbd5e1" opacity="0.85"/>
+  <!-- Neck -->
+  <path d="M90 78 L110 78 L115 98 L85 98 Z" fill="#94a3b8"/>
+  <!-- Jersey Torso -->
+  <path d="M50 102 L80 90 L100 106 L120 90 L150 102 L165 142 L145 150 L140 225 L60 225 L55 150 L35 142 Z" fill="url(#jerseyGrad_All-Rounder)"/>
+  <!-- Collar Trim -->
+  <path d="M80 90 L100 112 L120 90" fill="none" stroke="#f59e0b" stroke-width="4"/>
+  <!-- Jersey Stripes -->
+  <path d="M75 125 L100 148 L125 125" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
+  <!-- Role Label Badge -->
+  <rect x="30" y="200" width="140" height="24" rx="6" fill="#090d16" stroke="#f59e0b" stroke-width="1"/>
+  <text x="100" y="216" fill="#f59e0b" font-family="sans-serif" font-weight="900" font-size="11" text-anchor="middle" letter-spacing="1">ALL-ROUNDER</text>
+</svg>
